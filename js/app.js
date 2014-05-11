@@ -191,6 +191,29 @@ var websocketclient = {
         }
     },
 
+    'deleteRetainedMsg': function (id) {
+
+        if (confirm('Wirklich löschen ?')) {
+            var retainedMsg = _.find(websocketclient.messages, {'id': id});
+            
+            websocketclient.messages = _.filter(websocketclient.subscriptions, function (item) {
+                return item.id != id;
+            });
+
+
+            var newEmptyRetaindMessage = new Messaging.Message("");
+            newEmptyRetaindMessage.destinationName = retainedMsg.topic;
+            newEmptyRetaindMessage.qos = 0;
+            newEmptyRetaindMessage.retained = true;
+
+            this.client.send(newEmptyRetaindMessage);
+
+            websocketclient.render.messages();
+        }
+
+    },
+    
+
     'getRandomColor': function () {
         var r = (Math.round(Math.random() * 255)).toString(16);
         var g = (Math.round(Math.random() * 255)).toString(16);
@@ -261,7 +284,7 @@ var websocketclient = {
                 '           <div class="large-2 columns qos">Qos: ' + message.qos + '</div>' +
                 '           <div class="large-2 columns retain">';
             if (message.retained) {
-                html += 'Retained';
+                html += 'Retained (<a href="#" onclick="websocketclient.deleteRetainedMsg(' + largest + '); return false;">Delete</a>)';
             }
             html += '           </div>' +
                 '           <div class="large-12 columns message break-words">' + Encoder.htmlEncode(message.payload) + '</div>' +
